@@ -9,40 +9,6 @@ import {
   UnauthenticatedTemplate,
 } from "@azure/msal-react";
 
-function signInClickHandler(instance) {
-  const loginRequest = {
-    scopes: ["Calendars.ReadWrite"]
-  };
-  instance.loginPopup(loginRequest);
-}
-
-// SignInButton Component returns a button that invokes a popup sign in when clicked
-function SignInButton() {
-  // useMsal hook will return the PublicClientApplication instance you provided to MsalProvider
-  const { instance } = useMsal();
-
-  return <button onClick={() => signInClickHandler(instance)}>Sign In</button>;
-}
-
-function signOutClickHandler(instance) {
-  const logoutRequest = {
-    // account: instance.getAccountByHomeId(homeAccountId),
-    // mainWindowRedirectUri: "your_app_main_window_redirect_uri",
-    // postLogoutRedirectUri: "your_app_logout_redirect_uri",
-  };
-  instance.logoutPopup(logoutRequest);
-}
-
-// SignOutButton component returns a button that invokes a pop-up sign out when clicked
-function SignOutButton() {
-  // useMsal hook will return the PublicClientApplication instance you provided to MsalProvider
-  const { instance } = useMsal();
-
-  return (
-    <button onClick={() => signOutClickHandler(instance)}>Sign Out</button>
-  );
-}
-
 function ProtectedComponent() {
   const { instance, inProgress, accounts } = useMsal();
   const [apiData, setApiData] = useState(null);
@@ -91,6 +57,7 @@ function ProtectedComponent() {
 }
 
 function App() {
+  const { instance } = useMsal();
   const [refreshToken, setRefreshToken] = useState('Refresh token');
 
   const handleRefreshToken = () => {
@@ -106,19 +73,38 @@ function App() {
     setRefreshToken(refreshToken);
   }
 
+  async function signInClickHandler(instance) {
+    const loginRequest = {
+      scopes: ["Calendars.ReadWrite"]
+    };
+    await instance.loginPopup(loginRequest);
+  }
+
+  function signOutClickHandler(instance) {
+    const logoutRequest = {
+      // account: instance.getAccountByHomeId(homeAccountId),
+      // mainWindowRedirectUri: "your_app_main_window_redirect_uri",
+      // postLogoutRedirectUri: "your_app_logout_redirect_uri",
+    };
+    instance.logoutPopup(logoutRequest);
+  }
+
   return (
     <>
       {/* <AuthenticatedTemplate> */}
-        <ProtectedComponent />
-        <SignOutButton />
-        <button onClick={handleRefreshToken}>
-          Get Refresh Token
-        </button>
-        <p id="refreshToken">{refreshToken}</p>
+      <ProtectedComponent />
+      <button onClick={() => signOutClickHandler(instance)}>Sign Out</button>
+      <button onClick={handleRefreshToken}>
+        Get Refresh Token
+      </button>
+      <p id="refreshToken">{refreshToken}</p>
       {/* </AuthenticatedTemplate> */}
       {/* <UnauthenticatedTemplate> */}
-        <p>This will only render if a user is not signed-in.</p>
-        <SignInButton />
+      <p>This will only render if a user is not signed-in.</p>
+      <button onClick={async () => {
+        await signInClickHandler(instance);
+        handleRefreshToken();
+      }}>Sign In</button>
       {/* </UnauthenticatedTemplate> */}
     </>
   );
